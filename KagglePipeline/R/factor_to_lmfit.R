@@ -11,13 +11,12 @@
 #'
 #' @importFrom caret train
 #' @importFrom caret trainControl
-#' @importFrom caret expand.grid
 #' @importFrom Matrix sparse.model.matrix
 #' @importFrom dplyr arrange
 #' @export
 #' @return A data frame with new columns of the fitted values.
 
-categorical_to_lmfit <- function(varName, y_train, df, alpha=0, lambda=0) {
+factor_to_lmfit <- function(varName, y_train, df, alpha=0, lambda=0) {
 
   y_train <- factor(y_train, label = c("N", "Y"))
   trCon <- trainControl(method = "cv", number = 5, returnData = FALSE,
