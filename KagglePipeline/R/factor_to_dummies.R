@@ -1,9 +1,11 @@
 #' @title
 #' @author Jiacheng He
 #'
-#' @import
 #' @export
 #'
 
 
-factor_to_dummies <- function()
+factor_to_dummies <- function() {
+
+  return(NULL)
+}

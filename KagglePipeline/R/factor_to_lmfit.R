@@ -1,6 +1,6 @@
 #' @title Insert linear projection of categorical variables
-#' @description This function runs a set of linear regressions of y on each of the specified categorical variables. Then insert the fitted
-#' values of the linear regressions
+#' @description This function runs a regression on a set of dummies. Then replace it with the out-of-fold
+#' prediction in the training set, and with prediction in the test set.
 #' @author Jiacheng He
 #'
 #' @param varName A character, the name of the categorical variable
@@ -13,19 +13,36 @@
 #' @importFrom caret trainControl
 #' @importFrom Matrix sparse.model.matrix
 #' @importFrom dplyr arrange
+#' @importFrom dplyr '%>%'
 #' @export
 #' @return A data frame with new columns of the fitted values.
 
-factor_to_lmfit <- function(varName, y_train, df, alpha=0, lambda=0) {
+factor_to_lmfit <- function(df, facVar, yVar, trainIndex, alpha=0, lambda=0) {
 
-  y_train <- factor(y_train, label = c("N", "Y"))
+  facVar <- enquo(facVar) %>% quo_text()
+  yVar <- enquo(yVar) %>% quo_text()
+
+  y_train <- df[[yVar]][trainIndex] %>% factor(label = c("N", "Y"))
+
   trCon <- trainControl(method = "cv", number = 5, returnData = FALSE,
                         savePredictions = "final", classProbs = TRUE)
+
   glmnet_grid <- expand.grid(alpha = alpha, lambda = lambda)
-  equation <- as.formula(paste("~", varName))
+
+  equation <- as.formula(paste("~", facVar))
+
   dummy <- sparse.model.matrix(equation, data = df)
-  lm_fit <- train(dummy, y_train, method = "glmnet", trControl = trCon, tuneGrid = glmnet_grid)
-  varName_lmfit <- paste0(varName, "_lmfit")
-  df[[varName_lmfit]] <- arrange(lm_fit$pred, rowIndex)$Y
+
+  dummy_train <- dummy[trainIndex, ]
+  dummy_test <- dummy[-trainIndex, ]
+
+  lm_fit <- train(dummy_train, y_train, method = "glmnet", trControl = trCon, tuneGrid = glmnet_grid)
+
+  facVar_lmfit <- paste0(facVar, "_lmfit")
+
+  df[[facVar_lmfit]] <- NA
+  df[[facVar_lmfit]][trainIndex] <- arrange(lm_fit$pred, rowIndex)$Y
+  df[[facVar_lmfit]][-trainIndex] <- predict(lm_fit, dummy_test, type = "prob")$Y
+
   return(df)
 }
