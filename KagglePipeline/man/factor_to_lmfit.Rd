@@ -9,20 +9,23 @@ factor_to_lmfit(df, facVar, yVar, trainIndex, alpha = 0, lambda = 0)
 \arguments{
 \item{df}{The data frame which contains the variables}
 
+\item{facVar}{The factor variable}
+
+\item{yVar}{The left-hand-side target variable}
+
+\item{trainIndex}{The indexes of training set observations}
+
 \item{alpha}{alpha=0 for ridge, alpha=1 for LASSO.}
 
 \item{lambda}{Regularization parameter}
-
-\item{varName}{A character, the name of the categorical variable}
-
-\item{y_train}{The target variable in the training set}
 }
 \value{
 A data frame with new columns of the fitted values.
 }
 \description{
 This function runs a regression on a set of dummies. Then replace it with the out-of-fold
-prediction in the training set, and with prediction in the test set.
+prediction in the training set, and with prediction in the test set. (It only supports binary factor y
+now. Will extend to other types later.)
 }
 \author{
 Jiacheng He

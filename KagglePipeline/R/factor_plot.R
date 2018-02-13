@@ -1,6 +1,12 @@
 #' @title Plot the counts of each category or the average values of y for each category
-#' @description
+#' @description Provide guidence of how to process the factor variable in the next steps (e.g. We might
+#' want to get rid of the categories with rare frequencey, or combine the categories with similar average y)
 #' @author Jiacheng He
+#'
+#' @param df The data frame which contains the variables
+#' @param facVar The factor variable
+#' @param yVar The left-hand-side target variable
+#' @param stat stat="identity" to plot average y; stat="count" to plot the frequency
 #'
 #' @import rlang
 #' @import ggplot2

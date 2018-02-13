@@ -5,6 +5,9 @@ library(tidyr)
 library(stringr)
 library(ggplot2)
 library(caret)
+library(Rmpi)
+library(doParallel)
+
 
 df_train <- read_csv("../train.csv")
 df_test <- read_csv("../test.csv")
@@ -60,11 +63,23 @@ X_test <-
 
 y_train <- df$Survived[1:n_train]
 
+
+xgb_control <- trainControl(method = "cv", number = 5, returnData = FALSE,
+                            savePredictions = "final", classProbs = TRUE)
+
+xgb_grid <- expand.grid(nrounds = seq(600, 2000, 200), max_depth = 2:6, eta = seq(0.01, 0.1, 0.01), gamma = 0,
+                        colsample_bytree = seq(0.5, 1, 0.1), min_child_weight = 1, subsample = seq(0.5, 1, 0.1))
+
+
+
+num_nodes <- mpi.universe.size() - 1
+cl <- makeCluster(num_nodes, type = "MPI")
+registerDoParallel(cl)
+
 xgb_model <- train(X_train, factor(y_train, label = c("N", "Y")), method = "xgbTree",
-                   trControl = trainControl(method = "cv", number = 5, returnData = FALSE,
-                                            savePredictions = "final", classProbs = TRUE),
-                   tuneGrid = expand.grid(nrounds = 1000, max_depth = 6, eta = 0.3, gamma = 0,
-                                          colsample_bytree = 1, min_child_weight = 1, subsample = 1))
+                   trControl = xgb_control, tuneGrid = xgb_grid)
+
+save(xgb_model, file = "xgbModel.RData")
 
 submission <-
   data_frame(PassengerId = df_test$PassengerId,
@@ -72,5 +87,5 @@ submission <-
 
 submission$Survived <- as.integer(submission$Survived) - 1
 
-write.csv(submission, file = "submission_3.csv", row.names = FALSE)
+write.csv(submission, file = "submission_4.csv", row.names = FALSE)
 

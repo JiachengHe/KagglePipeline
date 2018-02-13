@@ -6,6 +6,19 @@
 \usage{
 factor_plot(df, facVar, yVar = NULL, stat = "identity")
 }
+\arguments{
+\item{df}{The data frame which contains the variables}
+
+\item{facVar}{The factor variable}
+
+\item{yVar}{The left-hand-side target variable}
+
+\item{stat}{stat="identity" to plot average y; stat="count" to plot the frequency}
+}
+\description{
+Provide guidence of how to process the factor variable in the next steps (e.g. We might
+want to get rid of the categories with rare frequencey, or combine the categories with similar average y)
+}
 \author{
 Jiacheng He
 }
