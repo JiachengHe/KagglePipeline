@@ -11,8 +11,8 @@ library(doParallel)
 cl <- makeCluster(3, type = "SOCK")
 registerDoParallel(cl)
 
-df_train <- read_csv("../train.csv")
-df_test <- read_csv("../test.csv")
+df_train <- read_csv("Titanic/data/train.csv")
+df_test <- read_csv("Titanic/data/test.csv")
 n_train <- dim(df_train)[1]
 
 df <- bind_rows(df_train, df_test)
@@ -81,7 +81,7 @@ registerDoParallel(cl)
 xgb_model <- train(X_train, factor(y_train, label = c("N", "Y")), method = "xgbTree",
                    trControl = xgb_control, tuneGrid = xgb_grid)
 
-save(xgb_model, file = "xgbModel.RData")
+save(xgb_model, file = "Titanic/model/xgbModel.RData")
 
 submission <-
   data_frame(PassengerId = df_test$PassengerId,
@@ -89,7 +89,8 @@ submission <-
 
 submission$Survived <- as.integer(submission$Survived) - 1
 
-write.csv(submission, file = "submission_6.csv", row.names = FALSE)
+ver_sub <- 6
+write.csv(submission, file = paste0("Titanic/submission/submission_", ver_sub, ".csv"), row.names = FALSE)
 
 
 xgb_grid <- expand.grid(nrounds = 2000, max_depth = 2, eta = 0.02, gamma = 0,

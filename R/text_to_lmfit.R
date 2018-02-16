@@ -8,7 +8,7 @@
 #' @export
 #'
 
-text_linear_fit <- function(text_var, y, df, replaced=FALSE) {
+text_to_lmfit <- function(text_var, y, df, replaced=FALSE) {
 
 
 
