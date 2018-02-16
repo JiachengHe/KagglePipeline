@@ -1,3 +1,5 @@
 # KagglePipeline
 
-I want to build automate the workflow of the data analysis and ML modeling in the Kaggle competition
+I want to automate the workflow of data analysis and ML modeling in Kaggle competitions.
+
+There is an example on the Titanic competition.

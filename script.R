@@ -8,6 +8,8 @@ library(caret)
 library(Rmpi)
 library(doParallel)
 
+cl <- makeCluster(3, type = "SOCK")
+registerDoParallel(cl)
 
 df_train <- read_csv("../train.csv")
 df_test <- read_csv("../test.csv")
@@ -87,5 +89,17 @@ submission <-
 
 submission$Survived <- as.integer(submission$Survived) - 1
 
-write.csv(submission, file = "submission_4.csv", row.names = FALSE)
+write.csv(submission, file = "submission_6.csv", row.names = FALSE)
+
+
+xgb_grid <- expand.grid(nrounds = 2000, max_depth = 2, eta = 0.02, gamma = 0,
+                        colsample_bytree = 1, min_child_weight = 1, subsample = 0.8)
+xgb_model <- train(X_train, factor(y_train, label = c("N", "Y")), method = "xgbTree",
+                   trControl = xgb_control, tuneGrid = xgb_grid)
+
+
+xgb_control <- trainControl(method = "cv", number = 5, returnData = FALSE,
+                            savePredictions = "final", classProbs = TRUE, search = "random")
+xgb_model <- train(X_train, factor(y_train, label = c("N", "Y")), method = "xgbTree",
+                   trControl = xgb_control, tuneLength = 200)
 
