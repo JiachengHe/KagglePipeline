@@ -5,6 +5,7 @@ library(tidyr)
 library(stringr)
 library(ggplot2)
 library(caret)
+library(Rmpi)
 library(doParallel)
 
 ver_sub <- 6
@@ -73,8 +74,8 @@ xgb_control <- trainControl(method = "cv", number = 5, returnData = FALSE,
 
 
 
-num_cores <- detectCores(logical = FALSE) - 1
-cl <- makeCluster(num_cores, type = "SOCK")
+num_nodes <- mpi.universe.size() - 1
+cl <- makeCluster(num_nodes, type = "MPI")
 registerDoParallel(cl)
 
 xgb_model <- train(X_train, factor(y_train, label = c("N", "Y")), method = "xgbTree",

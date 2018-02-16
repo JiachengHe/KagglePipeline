@@ -8,4 +8,4 @@
 #MSUB -m bea
 
 
-mpirun -np 1 R CMD BATCH --no-restore --no-save Titanic.R Titanic_log.txt
+mpirun -np 1 R CMD BATCH --no-restore --no-save Titanic_cluster_version.R Titanic_log.txt
