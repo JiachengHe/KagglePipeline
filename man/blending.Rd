@@ -4,7 +4,23 @@
 \alias{blending}
 \title{Blend the tuned models altogether}
 \usage{
-blending(method, model_list, df_train, df_test, ...)
+blending(model_list, X_train, y_train, X_test, method, trCon = NULL, ...)
+}
+\arguments{
+\item{model_list}{A list of fine tuned models output by caret::train}
+
+\item{X_train}{The training set X matrix}
+
+\item{y_train}{The training set target variable}
+
+\item{X_test}{The test set X matrix}
+
+\item{method}{The method parameter passed to caret::train}
+
+\item{...}{Not defined yet}
+}
+\value{
+The blending prediction of all models
 }
 \description{
 After training many models, use a final model to combine them all together

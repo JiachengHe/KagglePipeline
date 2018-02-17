@@ -9,9 +9,9 @@ factor_plot(df, facVar, yVar = NULL, stat = "identity")
 \arguments{
 \item{df}{The data frame which contains the variables}
 
-\item{facVar}{The factor variable}
+\item{facVar}{The name of the factor variable}
 
-\item{yVar}{The left-hand-side target variable}
+\item{yVar}{The name of the left-hand-side target variable}
 
 \item{stat}{stat="identity" to plot average y; stat="count" to plot the frequency}
 }
