@@ -11,6 +11,7 @@
 #'
 #' @import ggplot2
 #' @importFrom dplyr '%>%'
+#' @importFrom dplyr filter
 #' @export
 #'
 
@@ -20,6 +21,7 @@ factor_plot <- function(df, facVar, yVar=NULL, type="box", ylim=NULL) {
   if (type == "box") {
 
     df %>%
+      filter(train_or_test == "train") %>%
       ggplot(aes_string(facVar, yVar)) +
       geom_boxplot() +
       xlab(facVar) +
@@ -30,7 +32,7 @@ factor_plot <- function(df, facVar, yVar=NULL, type="box", ylim=NULL) {
 
     df %>%
       ggplot(aes_string(facVar)) +
-      geom_bar() +
+      geom_bar(aes(fill = train_or_test), position = "identity", alpha = 0.5) +
       xlab(facVar)
   }
 

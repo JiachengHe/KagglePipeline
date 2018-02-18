@@ -11,13 +11,14 @@
 automate_numeric_plot <- function(df, yVar, ylim=NULL) {
 
   y <- df[[yVar]]
+  train_or_test <- df$train_or_test
   df <- select_if(df, is.numeric)
   df[[yVar]] <- y
+  df$train_or_test <- train_or_test
 
-  k <- 1
+
   control_flow <- function(input, k){
     if (input == "") { k <- k + 1 }
-    else if (input == "q") { break }
     else if (input == "z") { k <- k - 1 }
     else if (input == "x") { k <- k }
     else if (str_sub(input, 1, 3) == "var") {
@@ -29,8 +30,14 @@ automate_numeric_plot <- function(df, yVar, ylim=NULL) {
     return(k)
   }
 
+  k <- 0
 
   while (k <= ncol(df)) {
+
+    input <- readline(prompt = "Press Enter for next plot:  ")
+    if (input == "q") { break }
+    k <- control_flow(input, k)
+
     if (k < 1) {
       k <- 1
       cat("This is already the first plot.\n")
@@ -45,9 +52,10 @@ automate_numeric_plot <- function(df, yVar, ylim=NULL) {
     print(numeric_plot(df, names(df)[k], yVar, type = "density", ylim = ylim))
     cat(paste("Density of", names(df)[k]))
     tmp <- readline(prompt = "")
-    input <- readline(prompt = "Press Enter for next plot:  ")
 
-    k <- control_flow(input, k)
+    print(numeric_plot(df, names(df)[k], yVar, type = "hist", ylim = ylim))
+    cat(paste("Histogram of", names(df)[k]))
+    tmp <- readline(prompt = "")
   }
 
 

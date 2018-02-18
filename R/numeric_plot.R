@@ -11,6 +11,7 @@
 #'
 #' @import ggplot2
 #' @importFrom dplyr '%>%'
+#' @importFrom dplyr filter
 #' @export
 #'
 
@@ -20,8 +21,9 @@ numeric_plot <- function(df, numVar, yVar=NULL, type="scatter", ylim=NULL) {
   if (type == "scatter") {
 
     df %>%
+      filter(train_or_test == "train") %>%
       ggplot(aes_string(numVar, yVar)) +
-      geom_point() +
+      geom_point(alpha = 0.5) +
       xlab(numVar) +
       ylab(yVar) +
       coord_cartesian(ylim = ylim)
@@ -30,14 +32,14 @@ numeric_plot <- function(df, numVar, yVar=NULL, type="scatter", ylim=NULL) {
 
     df %>%
       ggplot(aes_string(numVar)) +
-      geom_density() +
+      geom_density(aes(color = train_or_test)) +
       xlab(numVar)
 
   } else if (type == "hist") {
 
     df %>%
       ggplot(aes_string(numVar)) +
-      geom_histogram() +
+      geom_histogram(aes(fill = train_or_test), bins = 60, position = "identity", alpha = 0.5) +
       xlab(numVar)
   }
 

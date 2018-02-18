@@ -16,20 +16,21 @@ df_train %>%
   geom_density()
 
 n_train <- nrow(df_train)
-df <- bind_rows(df_train, df_test) %>%
-  rename(FirstFlrSF = `1stFlrSF`, SecondFlrSF = `2ndFlrSF`)
 
+df <- bind_rows(mutate(df_train, train_or_test = "train"),
+                mutate(df_test, train_or_test = "test")) %>%
+  rename(FirstFlrSF = `1stFlrSF`, SecondFlrSF = `2ndFlrSF`, ThreeSsnPorch = `3SsnPorch`) %>%   # Avoid errors
+  mutate(MSSubClass = as.character(MSSubClass)) %>%
+  random_impute(yVar = "SalePrice")
 
+# lapply(df, function(x){sum(is.na(x))})
+# summary(df_train)
 
-lapply(df, function(x){sum(is.na(x))})
-
-summary(df_train)
-
-factor_plot(df, "PoolQC", "SalePrice", stat = "box", ylim = ylim)
-factor_plot(df, "PoolQC", "SalePrice", stat = "count")
-factor_plot(df, "Street", "SalePrice", stat="box", ylim = ylim)
-factor_plot(df, "Neighborhood", "SalePrice", stat="box", ylim = ylim) + coord_flip()
-factor_plot(df, "Neighborhood", "SalePrice", stat="count", ylim = ylim) + coord_flip()
+factor_plot(df, "PoolQC", "SalePrice", type = "box", ylim = ylim)
+factor_plot(df, "PoolQC", "SalePrice", type = "count")
+factor_plot(df, "Street", "SalePrice", type="box", ylim = ylim)
+factor_plot(df, "Neighborhood", "SalePrice", type="box", ylim = ylim) + coord_flip()
+factor_plot(df, "Neighborhood", "SalePrice", type="count", ylim = ylim) + coord_flip()
 
 automate_factor_plot(df, "SalePrice", ylim = ylim)
 
@@ -61,7 +62,15 @@ df$SaleType <- recode(df$SaleType, .missing = "WD")
 df$PoolQC <- NULL
 df$Utilities <- NULL
 
-sapply(df, function(x){sum(is.na(x))})
+df %>% select_if(is.numeric) %>% sapply(function(x){sum(is.na(x))})
 
+numeric_plot(df, "TotalBsmtSF", "SalePrice", type = "scatter")
 
+automate_numeric_plot(df, "SalePrice")
+
+df <- df %>%        ## delete 7 observations
+  filter(!(((LotFrontage > 300) | (LotArea > 100000) | (MasVnrArea > 1500) | (BsmtFinSF1 > 5000) | (TotalBsmtSF > 6000) |
+         ((FirstFlrSF>4000) & (FirstFlrSF<5000)) | (GrLivArea > 5500)) & (train_or_test == "train")))
+
+summary(df_train$GarageYrBlt)
 
