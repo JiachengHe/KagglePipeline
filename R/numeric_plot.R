@@ -15,23 +15,33 @@
 #'
 
 
-factor_plot <- function(df, facVar, yVar=NULL, type="box", ylim=NULL) {
+numeric_plot <- function(df, numVar, yVar=NULL, type="scatter", ylim=NULL) {
 
-  if (type == "box") {
+  if (type == "scatter") {
 
     df %>%
-      ggplot(aes_string(facVar, yVar)) +
-      geom_boxplot() +
-      xlab(facVar) +
+      ggplot(aes_string(numVar, yVar)) +
+      geom_point() +
+      xlab(numVar) +
       ylab(yVar) +
       coord_cartesian(ylim = ylim)
 
-  } else if (type == "count") {
+  } else if (type == "density") {
 
     df %>%
-      ggplot(aes_string(facVar)) +
-      geom_bar() +
-      xlab(facVar)
+      ggplot(aes_string(numVar)) +
+      geom_density() +
+      xlab(numVar)
+
+  } else if (type == "hist") {
+
+    df %>%
+      ggplot(aes_string(numVar)) +
+      geom_histogram() +
+      xlab(numVar)
   }
+
+
+
 
 }

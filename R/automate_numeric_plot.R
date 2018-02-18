@@ -1,22 +1,17 @@
-#' @title Automate the factor_plot workflow when we have many categorical variables
-#' @description A interactive interface to display the plots one by one. Meanwhile we can write codes in the
-#' text editor to modify the categorical variables
+#' @title Automate the Numeric_plot workflow when we have many numeric variables
 #' @author Jiacheng He
 #'
-#' @param df The data frame
-#' @param yVar The name of the target variable
-#' @param ylim
 #'
-#' @importFrom dplyr select_if
-#' @importFrom stringr str_sub
+#'
+#'
+#'
 #' @export
 
 
-automate_factor_plot <- function(df, yVar, ylim=NULL) {
+automate_numeric_plot <- function(df, yVar, ylim=NULL) {
 
   y <- df[[yVar]]
-  is_cat <- function(x) {is.factor(x) | is.character(x)}
-  df <- select_if(df, is_cat)
+  df <- select_if(df, is.numeric)
   df[[yVar]] <- y
 
   k <- 1
@@ -43,12 +38,12 @@ automate_factor_plot <- function(df, yVar, ylim=NULL) {
 
     print(k)
 
-    print(factor_plot(df, names(df)[k], yVar, type = "box", ylim = ylim))
-    cat(paste("Average", yVar, "for", names(df)[k]))
+    print(numeric_plot(df, names(df)[k], yVar, type = "scatter", ylim = ylim))
+    cat(paste("Scatter plot of", yVar, "with", names(df)[k]))
     tmp <- readline(prompt = "")
 
-    print(factor_plot(df, names(df)[k], yVar, type = "count", ylim = ylim))
-    cat(paste("Count of each", names(df)[k]))
+    print(numeric_plot(df, names(df)[k], yVar, type = "density", ylim = ylim))
+    cat(paste("Density of", names(df)[k]))
     tmp <- readline(prompt = "")
     input <- readline(prompt = "Press Enter for next plot:  ")
 

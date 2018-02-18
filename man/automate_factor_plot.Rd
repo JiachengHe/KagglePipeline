@@ -4,12 +4,14 @@
 \alias{automate_factor_plot}
 \title{Automate the factor_plot workflow when we have many categorical variables}
 \usage{
-automate_factor_plot(df, yVar)
+automate_factor_plot(df, yVar, ylim = NULL)
 }
 \arguments{
 \item{df}{The data frame}
 
 \item{yVar}{The name of the target variable}
+
+\item{ylim}{}
 }
 \description{
 A interactive interface to display the plots one by one. Meanwhile we can write codes in the
