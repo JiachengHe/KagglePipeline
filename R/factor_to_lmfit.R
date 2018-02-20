@@ -5,8 +5,8 @@
 #' @author Jiacheng He
 #'
 #' @param df The data frame which contains the variables
-#' @param facVar The factor variable
-#' @param yVar The left-hand-side target variable
+#' @param facVar The name of the factor variable
+#' @param yVar The name of the left-hand-side target variable
 #' @param trainIndex The indexes of training set observations
 #' @param alpha alpha=0 for ridge, alpha=1 for LASSO.
 #' @param lambda Regularization parameter
@@ -19,15 +19,21 @@
 #' @export
 #' @return A data frame with new columns of the fitted values.
 
-factor_to_lmfit <- function(df, facVar, yVar, trainIndex, alpha=0, lambda=0) {
+factor_to_lmfit <- function(df, facVar, yVar, trainIndex, alpha=0, lambda=0, cv_method="none") {
 
-  facVar <- enquo(facVar) %>% quo_text()
-  yVar <- enquo(yVar) %>% quo_text()
+  y_train <- df[[yVar]][trainIndex]
 
-  y_train <- df[[yVar]][trainIndex] %>% factor(label = c("N", "Y"))
+  if (is.factor(y_train)) {
+    y_train <- factor(y_train, label = c("N", "Y"))
+    classProbs <- TRUE
 
-  trCon <- trainControl(method = "cv", number = 5, returnData = FALSE,
-                        savePredictions = "final", classProbs = TRUE)
+  } else if (is.numeric(y_train)) {
+    classProbs = FALSE
+  }
+
+
+  trCon <- trainControl(method = cv_method, number = 5, returnData = FALSE,
+                        savePredictions = "final", classProbs = classProbs)
 
   glmnet_grid <- expand.grid(alpha = alpha, lambda = lambda)
 
@@ -43,8 +49,14 @@ factor_to_lmfit <- function(df, facVar, yVar, trainIndex, alpha=0, lambda=0) {
   facVar_lmfit <- paste0(facVar, "_lmfit")
 
   df[[facVar_lmfit]] <- NA
-  df[[facVar_lmfit]][trainIndex] <- arrange(lm_fit$pred, rowIndex)$Y
-  df[[facVar_lmfit]][-trainIndex] <- predict(lm_fit, dummy_test, type = "prob")$Y
+  if (classProbs) {
+    df[[facVar_lmfit]][trainIndex] <- arrange(lm_fit$pred, rowIndex)$Y
+    df[[facVar_lmfit]][-trainIndex] <- predict(lm_fit, dummy_test, type = "prob")$Y
+  } else {
+    if (cv_method == "none") { df[[facVar_lmfit]][trainIndex] <- predict(lm_fit, dummy_train) }
+    else { df[[facVar_lmfit]][trainIndex] <- arrange(lm_fit$pred, rowIndex)$pred }
+    df[[facVar_lmfit]][-trainIndex] <- predict(lm_fit, dummy_test)
+  }
 
   return(df)
 }

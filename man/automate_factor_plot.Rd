@@ -4,7 +4,7 @@
 \alias{automate_factor_plot}
 \title{Automate the factor_plot workflow when we have many categorical variables}
 \usage{
-automate_factor_plot(df, yVar, ylim = NULL)
+automate_factor_plot(df, yVar, facVars = NULL, ylim = NULL)
 }
 \arguments{
 \item{df}{The data frame}

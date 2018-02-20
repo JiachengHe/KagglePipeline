@@ -4,7 +4,7 @@
 \alias{random_impute}
 \title{Randomly impute missing values}
 \usage{
-random_impute(df, seed = 1000)
+random_impute(df, yVar = NULL, seed = 1000)
 }
 \description{
 Draw from non-missing values, then replace missing values

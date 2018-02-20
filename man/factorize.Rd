@@ -4,7 +4,7 @@
 \alias{factorize}
 \title{Turn categorical variables into the factor format}
 \usage{
-factorize(df, var_list)
+factorize(df, var_list = NULL)
 }
 \author{
 Jiacheng He

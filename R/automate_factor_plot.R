@@ -12,20 +12,19 @@
 #' @export
 
 
-automate_factor_plot <- function(df, yVar, ylim=NULL) {
+automate_factor_plot <- function(df, yVar, facVars=NULL, ylim=NULL) {
 
-  y <- df[[yVar]]
-  is_cat <- function(x) {is.factor(x) | is.character(x)}
-  df <- select_if(df, is_cat)
-  df[[yVar]] <- y
-
+  if (is.null(facVars)) {
+    is_cat <- function(x) {is.factor(x) | is.character(x)}
+    facVars <- names(df)[sapply(df, is_cat)]
+  }
 
   control_flow <- function(input, k){
     if (input == "") { k <- k + 1 }
     else if (input == "z") { k <- k - 1 }
     else if (input == "x") { k <- k }
     else if (str_sub(input, 1, 3) == "var") {
-      if (str_sub(input, 5, -1) %in% names(df)) { k <- which(names(df)==str_sub(input, 5, -1))}
+      if (str_sub(input, 5, -1) %in% facVars) { k <- which(facVars==str_sub(input, 5, -1))}
       else {cat("Wrong variable name")}
     } else {
       print("Wrong command"); k <- k
@@ -35,7 +34,7 @@ automate_factor_plot <- function(df, yVar, ylim=NULL) {
 
   k <- 0
 
-  while (k <= ncol(df)) {
+  while (k <= length(facVars)) {
 
     input <- readline(prompt = "Press Enter for next plot:  ")
     if (input == "q") { break }
@@ -48,12 +47,12 @@ automate_factor_plot <- function(df, yVar, ylim=NULL) {
 
     print(k)
 
-    print(factor_plot(df, names(df)[k], yVar, type = "box", ylim = ylim))
-    cat(paste("Average", yVar, "for", names(df)[k]))
+    print(factor_plot(df, facVars[k], yVar, type = "box", ylim = ylim))
+    cat(paste("Average", yVar, "for", facVars[k]))
     tmp <- readline(prompt = "")
 
-    print(factor_plot(df, names(df)[k], yVar, type = "count", ylim = ylim))
-    cat(paste("Count of each", names(df)[k]))
+    print(factor_plot(df, facVars[k], yVar, type = "count", ylim = ylim))
+    cat(paste("Count of each", facVars[k]))
     tmp <- readline(prompt = "")
   }
 
