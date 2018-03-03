@@ -7,7 +7,8 @@
 random_impute(df, yVar = NULL, seed = 1000)
 }
 \description{
-Draw from non-missing values, then replace missing values
+Draw from non-missing values, then replace missing values. This function should be run after
+other NA impute.
 }
 \author{
 Jiacheng He

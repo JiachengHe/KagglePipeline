@@ -49,12 +49,20 @@ factor_to_lmfit <- function(df, facVar, yVar, trainIndex, alpha=0, lambda=0, cv_
   facVar_lmfit <- paste0(facVar, "_lmfit")
 
   df[[facVar_lmfit]] <- NA
+
   if (classProbs) {
-    df[[facVar_lmfit]][trainIndex] <- arrange(lm_fit$pred, rowIndex)$Y
+
+    if (cv_method == "none") {
+      df[[facVar_lmfit]][trainIndex] <- predict(lm_fit, dummy_train, type = "prob")$Y
+    } else { df[[facVar_lmfit]][trainIndex] <- arrange(lm_fit$pred, rowIndex)$Y }
+
     df[[facVar_lmfit]][-trainIndex] <- predict(lm_fit, dummy_test, type = "prob")$Y
+
   } else {
-    if (cv_method == "none") { df[[facVar_lmfit]][trainIndex] <- predict(lm_fit, dummy_train) }
-    else { df[[facVar_lmfit]][trainIndex] <- arrange(lm_fit$pred, rowIndex)$pred }
+
+    if (cv_method == "none") { df[[facVar_lmfit]][trainIndex] <- predict(lm_fit, dummy_train)
+    } else { df[[facVar_lmfit]][trainIndex] <- arrange(lm_fit$pred, rowIndex)$pred }
+
     df[[facVar_lmfit]][-trainIndex] <- predict(lm_fit, dummy_test)
   }
 

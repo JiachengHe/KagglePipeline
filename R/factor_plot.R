@@ -20,13 +20,31 @@ factor_plot <- function(df, facVar, yVar=NULL, type="box", ylim=NULL) {
 
   if (type == "box") {
 
-    df %>%
-      filter(train_or_test == "train") %>%
-      ggplot(aes_string(facVar, yVar)) +
-      geom_boxplot() +
-      xlab(facVar) +
-      ylab(yVar) +
-      coord_cartesian(ylim = ylim)
+    if (is.numeric(df[[yVar]])) {
+
+      df %>%
+        filter(train_or_test == "train") %>%
+        ggplot(aes_string(facVar, yVar)) +
+        geom_boxplot() +
+        xlab(facVar) +
+        ylab(yVar) +
+        coord_cartesian(ylim = ylim)
+
+    } else if (is.factor(df[[yVar]])) {
+
+      df[[yVar]] <- as.integer(as.character(df[[yVar]]))
+
+      df %>%
+        filter(train_or_test == "train") %>%
+        group_by_(facVar) %>%
+        summarize_at(yVar, mean, na.rm=TRUE) %>%
+        ggplot(aes_string(facVar, yVar)) +
+        geom_bar(stat = "identity") +
+        xlab(facVar) +
+        coord_cartesian(ylim = ylim)
+    }
+
+
 
   } else if (type == "count") {
 

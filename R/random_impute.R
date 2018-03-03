@@ -1,5 +1,6 @@
 #' @title Randomly impute missing values
-#' @description Draw from non-missing values, then replace missing values
+#' @description Draw from non-missing values, then replace missing values. This function should be run after
+#' other NA impute.
 #' @author Jiacheng He
 #'
 #'

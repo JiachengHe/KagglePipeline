@@ -20,13 +20,28 @@ numeric_plot <- function(df, numVar, yVar=NULL, type="scatter", ylim=NULL) {
 
   if (type == "scatter") {
 
-    df %>%
-      filter(train_or_test == "train") %>%
-      ggplot(aes_string(numVar, yVar)) +
-      geom_point(alpha = 0.5) +
-      xlab(numVar) +
-      ylab(yVar) +
-      coord_cartesian(ylim = ylim)
+    if (is.numeric(df[[yVar]])) {
+
+      df %>%
+        filter(train_or_test == "train") %>%
+        ggplot(aes_string(numVar, yVar)) +
+        geom_point(alpha = 0.5) +
+        xlab(numVar) +
+        ylab(yVar) +
+        coord_cartesian(ylim = ylim)
+
+    } else if (is.factor(df[[yVar]])) {
+
+      df %>%
+        filter(train_or_test == "train") %>%
+        ggplot(aes_string(yVar, numVar)) +
+        geom_boxplot() +
+        xlab(yVar) +
+        ylab(numVar) +
+        coord_cartesian(xlim = ylim) +
+        coord_flip()
+    }
+
 
   } else if (type == "density") {
 

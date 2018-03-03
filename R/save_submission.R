@@ -6,11 +6,11 @@
 #' @importFrom stringr str_extract
 #' @export
 
-save_submission <- function(df_sub, path="submissions/") {
+save_submission <- function(df_sub, path="submission/") {
 
   submission_files <- list.files(path) %>% str_subset("submission")
-  j <- max(str_extract(submission_files, "\\d"))
-  j <- as.numeric(j) + 1
+  j <- max(as.numeric(str_extract(submission_files, "\\-*\\d+\\.*\\d*")))
+  j <- j + 1
   filename <- paste0(path, "submission_", j, ".csv")
   write.csv(df_sub, file = filename, row.names = FALSE)
 }

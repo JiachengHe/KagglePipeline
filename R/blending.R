@@ -17,7 +17,7 @@
 
 
 
-blending <- function(model_list, X_train, y_train, X_test, method, trCon=NULL, ...){
+blending <- function(model_list, X_train, y_train, X_test, method, trCon=NULL, tuneLength=10, ...){
 
   K <- length(model_list)
   n_train <- nrow(X_train)
@@ -34,13 +34,22 @@ blending <- function(model_list, X_train, y_train, X_test, method, trCon=NULL, .
     model <- model_list[[k]]
     model_name <- names(model_list)[k]
 
-    X_train_modelfit[,k] <- arrange(model$pred, rowIndex)$Y
-    X_test_modelfit[,k] <- predict(model, X_test, type = "prob")$Y
+    if (is.factor(y_train)){
+      X_train_modelfit[,k] <- arrange(model$pred, rowIndex)$Y
+      X_test_modelfit[,k] <- predict(model, X_test, type = "prob")$Y
+      classProbs <- TRUE
+
+    } else if (is.numeric(y_train)) {
+      X_train_modelfit[,k] <- arrange(model$pred, rowIndex)$pred
+      X_test_modelfit[,k] <- predict(model, X_test)
+      classProbs = FALSE
+    }
+
   }
 
   if (is.null(trCon)) {
     trCon <- trainControl(method = "cv", number = 5, returnData = FALSE,
-                          savePredictions = "final", classProbs = TRUE)
+                          savePredictions = "final", classProbs = classProbs, search = "random")
   }
 
 

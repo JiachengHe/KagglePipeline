@@ -4,7 +4,7 @@
 \alias{save_submission}
 \title{Save the Kaggle submissions .csv files}
 \usage{
-save_submission(df_sub, path = "submissions/")
+save_submission(df_sub, path = "submission/")
 }
 \description{
 Automate the numbering and saving of the "submission_.csv" files

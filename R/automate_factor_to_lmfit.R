@@ -7,23 +7,27 @@
 #'
 
 
-automate_factor_to_lmfit <- function(df, yVar, keep=FALSE) {
+automate_factor_to_lmfit <- function(df, yVar, drop=TRUE, drop_nzv=TRUE) {
 
   trainIndex <- (df$train_or_test == "train")
   facVars <- names(df)[sapply(df, is.factor)]
 
-  facVars <- facVars[facVars != "train_or_test"]
+  facVars <- facVars[!(facVars %in% c(yVar, "train_or_test"))]
 
-  nzv <- nearZeroVar(df[facVars], freqCut = 95/5, saveMetrics = TRUE)
-  nzv_facVar <- rownames(nzv[nzv$nzv,])
-  if (length(nzv_facVar) > 0) {
-    cat(paste("These variables are deleted because of too small variation:\n\n", list(nzv_facVar)))
-    facVars <- facVars[!(facVars %in% nzv_facVar)]
+  if (drop_nzv) {
+
+    nzv <- nearZeroVar(df[facVars], freqCut = 95/5, saveMetrics = TRUE)
+    nzv_facVar <- rownames(nzv[nzv$nzv,])
+    if (length(nzv_facVar) > 0) {
+      cat(paste("These variables are deleted because of too small variation:\n\n", list(nzv_facVar)))
+      facVars <- facVars[!(facVars %in% nzv_facVar)]
+    }
   }
+
 
   for (facVar in facVars) {
     df <- factor_to_lmfit(df, facVar, yVar, trainIndex)
-    if (!keep) {
+    if (drop) {
       df[[facVar]] <- NULL
     }
   }

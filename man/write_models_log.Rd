@@ -5,7 +5,7 @@
 \title{Save the well-tuned models}
 \usage{
 write_models_log(model, model_name, file_name = "models_log.RData",
-  path = "models/")
+  path = "model/")
 }
 \description{
 Gather the models into a list and save them as .RData

@@ -97,3 +97,9 @@ Id <- df_test$Id
 submission <- data_frame(Id = Id,
                          SalePrice = exp(predict(lm_model, newdata = df_test)))
 write.csv(submission, file = "House_Prices/submission_1.csv", row.names = FALSE)
+
+
+
+
+
+models_blend <- blending(list(glmnet=glmnet_model, xgb=xgb_model), X_train, y_train, X_test, method="xgbTree")

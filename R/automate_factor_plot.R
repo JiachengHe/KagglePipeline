@@ -19,6 +19,8 @@ automate_factor_plot <- function(df, yVar, facVars=NULL, ylim=NULL) {
     facVars <- names(df)[sapply(df, is_cat)]
   }
 
+  facVars <- facVars[!(facVars %in% c(yVar, "train_or_test"))]
+
   control_flow <- function(input, k){
     if (input == "") { k <- k + 1 }
     else if (input == "z") { k <- k - 1 }
@@ -34,7 +36,7 @@ automate_factor_plot <- function(df, yVar, facVars=NULL, ylim=NULL) {
 
   k <- 0
 
-  while (k <= length(facVars)) {
+  while (k < length(facVars)) {
 
     input <- readline(prompt = "Press Enter for next plot:  ")
     if (input == "q") { break }

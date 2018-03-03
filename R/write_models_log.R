@@ -7,7 +7,7 @@
 
 
 
-write_models_log <- function(model, model_name, file_name="models_log.RData", path="models/") {
+write_models_log <- function(model, model_name, file_name="models_log.RData", path="model/") {
 
   if (file_name %in% list.files(path)) {
 

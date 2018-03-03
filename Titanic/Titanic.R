@@ -7,70 +7,61 @@ library(ggplot2)
 library(caret)
 library(doParallel)
 
-ver_sub <- 6
-tuneLength <- 1000
+options(readr.num_columns = 0)
+df_train <- read_csv("data/train.csv")
+df_test <- read_csv("data/test.csv")
 
-df_train <- read_csv("Titanic/data/train.csv")
-df_test <- read_csv("Titanic/data/test.csv")
-n_train <- dim(df_train)[1]
 
-df <- bind_rows(df_train, df_test)
+n_train <- nrow(df_train)
+n_test <- nrow(df_test)
 
-lapply(df, summary)
-# Find variables with NA
-lapply(df, function(x){sum(is.na(x))})
+df <- bind_rows(mutate(df_train, train_or_test = "train"),
+                mutate(df_test, train_or_test = "test"))
+df$Survived <- factor(df$Survived)
 
-df$Cabin_letter <- ifelse(is.na(df$Cabin), "NA", str_sub(df$Cabin, 1, 1))
-df <- replace_na(df, list(Cabin = "NA", Embarked = "NA", Fare = median(df$Fare, na.rm = TRUE)))
 
-table(df$Cabin_letter)
+sapply(df, function(x){sum(is.na(x))})
+
+# numeric_plot(df, "Age", "Survived")
+numeric_plot(df, "Fare", "Survived", ylim = c(0,300))
+numeric_plot(df, "Age", "Survived")
+factor_plot(df, "Embarked", "Survived")
+
+source("Titanic_FE.R")
+
+df <- df %>%
+  select(-Name, -Ticket, -Cabin, -Surname, -Surname) %>%
+  factorize(list("Pclass", "Sex", "Embarked", "Cabin_letter", "Title", "FamilyID"))
+
+df <- random_impute(df, yVar = "Survived")
+
+
 
 ## Feature Engineering
-factor_plot(df, Cabin_letter, Survived, stat = "identity")
-factor_plot(df, Cabin_letter, Survived, stat = "count")
-df$Cabin_letter[df$Cabin_letter == "T"] <- "NA"
-df$Cabin_letter[df$Cabin_letter %in% c("B", "D", "E")] <- "high"
-df$Cabin_letter[df$Cabin_letter %in% c("A", "C", "F", "G")] <- "low"
+automate_factor_plot(df, yVar = "Survived")
 
-factor_plot(df, Embarked, Survived, stat = "identity")
-factor_plot(df, Embarked, Survived, stat = "count")
-df$Embarked[df$Embarked == "NA"] <- "S"
+automate_numeric_plot(df, yVar = "Survived")
 
-factor_plot(df, Pclass, Survived, stat = "identity")
-factor_plot(df, Pclass, Survived, stat = "count")
 
-factor_plot(df, Sex, Survived, stat = "identity")
-factor_plot(df, Sex, Survived, stat = "count")
 
-df$familySize <- df$Parch + df$SibSp
+df <- automate_factor_to_lmfit(df, yVar = "Survived", drop_nzv = FALSE)
 
-df <- factorize(df, list("Sex", "Pclass", "Cabin_letter", "Embarked"))
-str(df)
-
-df <- factor_to_lmfit(df, Sex, Survived, trainIndex=1:n_train)
-df <- factor_to_lmfit(df, Pclass, Survived, trainIndex=1:n_train)
-df <- factor_to_lmfit(df, Embarked, Survived, trainIndex=1:n_train)
-df <- factor_to_lmfit(df, Cabin_letter, Survived, trainIndex=1:n_train)
 
 X_train <-
   df[1:n_train, ] %>%
-  select(Age, SibSp, Parch, familySize, Fare, Sex_lmfit, Pclass_lmfit, Embarked_lmfit, Cabin_letter_lmfit) %>%
+  select(Age, SibSp, Parch, FamilySize, Fare, Sex_lmfit, Pclass_lmfit, Embarked_lmfit, Cabin_letter_lmfit, Title_lmfit, FamilyID_lmfit) %>%
   as.matrix()
 
 X_test <-
   df[-(1:n_train), ] %>%
-  select(Age, SibSp, Parch, familySize, Fare, Sex_lmfit, Pclass_lmfit, Embarked_lmfit, Cabin_letter_lmfit) %>%
+  select(Age, SibSp, Parch, FamilySize, Fare, Sex_lmfit, Pclass_lmfit, Embarked_lmfit, Cabin_letter_lmfit, Title_lmfit, FamilyID_lmfit) %>%
   as.matrix()
 
 y_train <- df$Survived[1:n_train]
 
 
-xgb_control <- trainControl(method = "cv", number = 5, returnData = FALSE,
+trControl <- trainControl(method = "cv", number = 5, returnData = FALSE,
                             savePredictions = "final", classProbs = TRUE, search = "random")
-
-#xgb_grid <- expand.grid(nrounds = seq(600, 2000, 200), max_depth = 2:6, eta = seq(0.01, 0.1, 0.01), gamma = 0,
-#                        colsample_bytree = seq(0.5, 1, 0.1), min_child_weight = 1, subsample = seq(0.5, 1, 0.1))
-
 
 
 num_cores <- detectCores(logical = FALSE) - 1
@@ -78,17 +69,33 @@ cl <- makeCluster(num_cores, type = "SOCK")
 registerDoParallel(cl)
 
 xgb_model <- train(X_train, factor(y_train, label = c("N", "Y")), method = "xgbTree",
-                   trControl = xgb_control, tuneLength = tuneLength)
+                   trControl = trControl, tuneLength = 100)
+write_models_log(xgb_model, "xgb2")
+save_submission(data_frame(PassengerId = df_test$PassengerId,
+                           Survived = as.integer(predict(xgb_model, X_test)) - 1))
 
-save(xgb_model, file = paste0("Titanic/model/xgbModel_", ver_sub, ".RData"))
+glmnet_model <- train(X_train, factor(y_train, label = c("N", "Y")), method = "glmnet",
+                      preProcess = c("center", "scale"), trControl = trControl, tuneLength = 50)
+write_models_log(glmnet_model, "glmnet")
+save_submission(data_frame(PassengerId = df_test$PassengerId,
+                           Survived = as.integer(predict(glmnet_model, X_test)) - 1))
 
-submission <-
-  data_frame(PassengerId = df_test$PassengerId,
-             Survived = predict(xgb_model, X_test))
+rf_model <- train(X_train, factor(y_train, label = c("N", "Y")), method = "rf",
+                  trControl = trControl, tuneLength = 50)
+write_models_log(rf_model, "rf")
+save_submission(data_frame(PassengerId = df_test$PassengerId,
+                           Survived = as.integer(predict(rf_model, X_test)) - 1))
 
-submission$Survived <- as.integer(submission$Survived) - 1
+
+# save(xgb_model, file = paste0("Titanic/model/xgbModel_", ver_sub, ".RData"))
+
+#submission <-
+#  data_frame(PassengerId = df_test$PassengerId,
+#             Survived = predict(xgb_model, X_test))
+
+#submission$Survived <- as.integer(submission$Survived) - 1
 
 
-write.csv(submission, file = paste0("Titanic/submission/submission_", ver_sub, ".csv"), row.names = FALSE)
+#write.csv(submission, file = paste0("Titanic/submission/submission_", ver_sub, ".csv"), row.names = FALSE)
 
 stopCluster(cl)

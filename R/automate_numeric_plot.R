@@ -11,6 +11,7 @@
 automate_numeric_plot <- function(df, yVar, ylim=NULL) {
 
   numVars <- names(df)[sapply(df, is.numeric)]
+  numVars <- numVars[numVars != yVar]
 
   control_flow <- function(input, k){
     if (input == "") { k <- k + 1 }
@@ -27,7 +28,7 @@ automate_numeric_plot <- function(df, yVar, ylim=NULL) {
 
   k <- 0
 
-  while (k <= ncol(df)) {
+  while (k < length(numVars)) {
 
     input <- readline(prompt = "Press Enter for next plot:  ")
     if (input == "q") { break }
