@@ -4,7 +4,7 @@
 \alias{automate_factor_to_lmfit}
 \title{Automate the factor_to_lmfit workflow for all categorical variables in the data frame}
 \usage{
-automate_factor_to_lmfit(df, yVar, drop = TRUE)
+automate_factor_to_lmfit(df, yVar, drop = TRUE, drop_nzv = TRUE)
 }
 \description{
 Automatically transform all categorical variables into linear fit

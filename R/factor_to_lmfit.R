@@ -19,52 +19,15 @@
 #' @export
 #' @return A data frame with new columns of the fitted values.
 
-factor_to_lmfit <- function(df, facVar, yVar, trainIndex, alpha=0, lambda=0, cv_method="none") {
+factor_to_lmfit <- function(df, yVar, facVar, trainIndex, alpha=0, lambda=0, trCon=NULL, cv_method="none") {
 
-  y_train <- df[[yVar]][trainIndex]
-
-  if (is.factor(y_train)) {
-    y_train <- factor(y_train, label = c("N", "Y"))
-    classProbs <- TRUE
-
-  } else if (is.numeric(y_train)) {
-    classProbs = FALSE
-  }
-
-
-  trCon <- trainControl(method = cv_method, number = 5, returnData = FALSE,
-                        savePredictions = "final", classProbs = classProbs)
-
-  glmnet_grid <- expand.grid(alpha = alpha, lambda = lambda)
-
-  equation <- as.formula(paste("~", facVar))
-
-  dummy <- sparse.model.matrix(equation, data = df)
-
-  dummy_train <- dummy[trainIndex, ]
-  dummy_test <- dummy[-trainIndex, ]
-
-  lm_fit <- train(dummy_train, y_train, method = "glmnet", trControl = trCon, tuneGrid = glmnet_grid)
+  dummy <- as.formula(paste("~", facVar)) %>%
+    sparse.model.matrix(data = df)
 
   facVar_lmfit <- paste0(facVar, "_lmfit")
 
-  df[[facVar_lmfit]] <- NA
-
-  if (classProbs) {
-
-    if (cv_method == "none") {
-      df[[facVar_lmfit]][trainIndex] <- predict(lm_fit, dummy_train, type = "prob")$Y
-    } else { df[[facVar_lmfit]][trainIndex] <- arrange(lm_fit$pred, rowIndex)$Y }
-
-    df[[facVar_lmfit]][-trainIndex] <- predict(lm_fit, dummy_test, type = "prob")$Y
-
-  } else {
-
-    if (cv_method == "none") { df[[facVar_lmfit]][trainIndex] <- predict(lm_fit, dummy_train)
-    } else { df[[facVar_lmfit]][trainIndex] <- arrange(lm_fit$pred, rowIndex)$pred }
-
-    df[[facVar_lmfit]][-trainIndex] <- predict(lm_fit, dummy_test)
-  }
+  df[[facVar_lmfit]] <- dummy_to_lmfit(df, yVar, dummy, trainIndex, alpha=alpha, lambda=lambda,
+                                       trCon=trCon, cv_method=cv_method)
 
   return(df)
 }
