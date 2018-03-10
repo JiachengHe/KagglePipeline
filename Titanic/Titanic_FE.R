@@ -34,4 +34,6 @@ df$FamilyID[df$FamilyID %in% famIDs$Var1] <- 'Small'
 
 df$Age[is.na(df$Age)] <- median(df$Age, na.rm = TRUE)
 
+df$Kid <- factor(df$Age < 18)
+
 

@@ -4,6 +4,7 @@ library(dplyr)
 library(ggplot2)
 library(caret)
 library(doParallel)
+library(Rmpi)
 
 options(readr.num_columns = 0)
 df_train <- read_csv("data/train.csv")
@@ -39,7 +40,7 @@ df <- random_impute(df, yVar = "SalePrice")
 
 df <- df %>%        ## delete 7 observations
   filter(!(((LotFrontage > 300) | (LotArea > 100000) | (MasVnrArea > 1500) | (BsmtFinSF1 > 5000) | (TotalBsmtSF > 6000) |
-         ((FirstFlrSF>4000) & (FirstFlrSF<5000)) | (GrLivArea > 5500)) & (train_or_test == "train")))
+              ((FirstFlrSF>4000) & (FirstFlrSF<5000)) | (GrLivArea > 5500)) & (train_or_test == "train")))
 
 sum(df$train_or_test == "test") == n_test    # Make sure no observations in the test are removed
 
@@ -69,23 +70,21 @@ trControl <- trainControl(method = "cv", number = 5, returnData = FALSE,
 
 
 
-
-cl <- makeCluster(detectCores(logical = FALSE) - 1, type = "SOCK")
+num_nodes <- mpi.universe.size() - 1
+cl <- makeCluster(num_nodes, type = "MPI")
 registerDoParallel(cl)
 
 
-xgb_model <- train(X_train, y_train, method = "xgbTree", trControl = trControl, tuneLength = 100)
+xgb_model <- train(X_train, y_train, method = "xgbTree", trControl = trControl, tuneLength = 10)
 
-glmnet_model <- train(X_train, y_train, method = "glmnet", preProcess = c("center", "scale"), trControl = trControl, tuneLength = 100)
+glmnet_model <- train(X_train, y_train, method = "glmnet", preProcess = c("center", "scale"), trControl = trControl, tuneLength = 1000)
 
-rf_model <- train(X_train, y_train, method = "rf", trControl = trControl, tuneLength = 100)
+rf_model <- train(X_train, y_train, method = "rf", trControl = trControl, tuneLength = 1000)
 
-lm_model <- train(X_train, y_train, method = "lm", preProcess = c("center", "scale"), trControl = trControl, tuneLength = 10)
+model_blend <- blending(list(xgb=xgb_model, glmnet=glmnet_model, rf=rf_model), X_train, y_train, X_test,
+                        method="glmnet", tuneLength = 1000)
 
-model_blend <- blending(list(xgb=xgb_model, glmnet=glmnet_model, rf=rf_model, lm=lm_model), X_train, y_train, X_test,
-                        method="glmnet", tuneLength = 100)
-
-write_models_log(model_blend, "blending_xgb_glmnet_rf_lm")
+write_models_log(model_blend, "blending_xgb_glmnet_rf")
 
 save_submission(data_frame(Id = df_test$Id,
                            SalePrice = exp(model_blend$y_pred)))

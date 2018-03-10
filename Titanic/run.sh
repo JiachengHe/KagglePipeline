@@ -1,11 +1,11 @@
 #!/bin/sh
 #
 #MSUB -M jiacheng.he@ku.edu
-#MSUB -N XGB
+#MSUB -N crmda
 #MSUB -q crmda
-#MSUB -l nodes=10:ppn=20,pmem=6gb
+#MSUB -l nodes=5:ppn=20,pmem=6gb
 #MSUB -l walltime=24:00:00
 #MSUB -m bea
 
 
-mpirun -np 1 R CMD BATCH --no-restore --no-save Titanic_cluster_version.R Titanic_log.txt
+mpirun -np 1 R CMD BATCH --no-restore --no-save Titanic_cluster.R Titanic_log.txt
