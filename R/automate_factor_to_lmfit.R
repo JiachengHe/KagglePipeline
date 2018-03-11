@@ -26,7 +26,7 @@ automate_factor_to_lmfit <- function(df, yVar, drop=TRUE, drop_nzv=TRUE) {
 
 
   for (facVar in facVars) {
-    df <- factor_to_lmfit(df, facVar, yVar, trainIndex)
+    df <- factor_to_lmfit(df, yVar, facVar, trainIndex)
     if (drop) {
       df[[facVar]] <- NULL
     }

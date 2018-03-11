@@ -4,13 +4,20 @@
 #'
 #' @importFrom stringr str_subset
 #' @importFrom stringr str_extract
+#' @importFrom dplyr '%>%'
 #' @export
 
-save_submission <- function(df_sub, path="submission/") {
+write_submission <- function(df_sub, path="submission/") {
 
   submission_files <- list.files(path) %>% str_subset("submission")
-  j <- max(as.numeric(str_extract(submission_files, "\\-*\\d+\\.*\\d*")))
-  j <- j + 1
+
+  if (length(submission_files) > 0) {
+    j <- max(as.numeric(str_extract(submission_files, "\\-*\\d+\\.*\\d*"))) + 1
+  } else {
+    j <- 1
+  }
   filename <- paste0(path, "submission_", j, ".csv")
   write.csv(df_sub, file = filename, row.names = FALSE)
+
+  return(filename)
 }

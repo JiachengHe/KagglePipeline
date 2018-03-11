@@ -34,17 +34,17 @@ dummy_to_lmfit <- function(df, yVar, dummy, trainIndex, alpha=0, lambda=0, trCon
   if (classProbs) {
 
     if (cv_method == "none") {
-      dummy_lmfit[trainIndex] <- predict(lm_fit, dummy_train, type = "prob")$Y
-    } else { dummy_lmfit[trainIndex] <- arrange(lm_fit$pred, rowIndex)$Y }
+      dummy_lmfit[trainIndex] <- predict(lm_model, dummy_train, type = "prob")$Y
+    } else { dummy_lmfit[trainIndex] <- arrange(lm_model$pred, rowIndex)$Y }
 
-    dummy_lmfit[-trainIndex] <- predict(lm_fit, dummy_test, type = "prob")$Y
+    dummy_lmfit[-trainIndex] <- predict(lm_model, dummy_test, type = "prob")$Y
 
   } else {
 
-    if (cv_method == "none") { dummy_lmfit[trainIndex] <- predict(lm_fit, dummy_train)
-    } else { dummy_lmfit[trainIndex] <- arrange(lm_fit$pred, rowIndex)$pred }
+    if (cv_method == "none") { dummy_lmfit[trainIndex] <- predict(lm_model, dummy_train)
+    } else { dummy_lmfit[trainIndex] <- arrange(lm_model$pred, rowIndex)$pred }
 
-    dummy_lmfit[-trainIndex] <- predict(lm_fit, dummy_test)
+    dummy_lmfit[-trainIndex] <- predict(lm_model, dummy_test)
   }
 
   return(dummy_lmfit)

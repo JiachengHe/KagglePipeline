@@ -29,22 +29,29 @@ blending <- function(model_list, X_train, y_train, X_test, method, trCon=NULL, t
   colnames(X_train_modelfit) <- paste0(names(model_list), "_fit")
   colnames(X_test_modelfit) <- paste0(names(model_list), "_fit")
 
-  for (k in 1:K) {
+  if (is.factor(y_train)){
 
-    model <- model_list[[k]]
-    model_name <- names(model_list)[k]
+    classProbs <- TRUE
+    y_train <- factor(y_train, label = c("N", "Y"))
 
-    if (is.factor(y_train)){
+    for (k in 1:K) {
+
+      model <- model_list[[k]]
+
       X_train_modelfit[,k] <- arrange(model$pred, rowIndex)$Y
       X_test_modelfit[,k] <- predict(model, X_test, type = "prob")$Y
-      classProbs <- TRUE
+    }
+  } else if (is.numeric(y_train)) {
 
-    } else if (is.numeric(y_train)) {
+    classProbs = FALSE
+
+    for (k in 1:K) {
+
+      model <- model_list[[k]]
+
       X_train_modelfit[,k] <- arrange(model$pred, rowIndex)$pred
       X_test_modelfit[,k] <- predict(model, X_test)
-      classProbs = FALSE
     }
-
   }
 
   if (is.null(trCon)) {
@@ -55,10 +62,11 @@ blending <- function(model_list, X_train, y_train, X_test, method, trCon=NULL, t
 
   blend_model <- train(X_train_modelfit, y_train, method = method,
                        trControl = trCon, tuneLength = tuneLength)
+  blend_model$call$tuneLength <- tuneLength
 
-  y_pred <- predict(blend_model, X_test)
+  y_pred <- predict(blend_model, X_test_modelfit)
 
 
-  return(list(blend_model=blend_model, y_pred=y_pred, X_train_modelfit=X_train_modelfit,
-              X_test_modelfit=X_test_modelfit))
+  return(list(blend_model = blend_model, y_pred = y_pred, X_train_modelfit = X_train_modelfit,
+              X_test_modelfit = X_test_modelfit))
 }
