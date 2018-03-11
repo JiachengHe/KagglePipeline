@@ -7,6 +7,10 @@ library(ggplot2)
 library(caret)
 library(doParallel)
 
+if ("Titanic" %in% list.dirs(recursive = FALSE, full.names = FALSE)) {
+  setwd("Titanic")
+}
+
 options(readr.num_columns = 0)
 df_train <- read_csv("data/train.csv")
 df_test <- read_csv("data/test.csv")
@@ -20,7 +24,6 @@ df$Survived <- factor(df$Survived)
 
 
 sapply(df, function(x){sum(is.na(x))})
-
 source("Titanic_FE.R")
 
 df <- df %>%
@@ -30,14 +33,8 @@ df <- df %>%
 sapply(df, function(x){sum(is.na(x))})
 df <- random_impute(df, yVar = "Survived")
 
-
-
-## Feature Engineering
-automate_factor_plot(df, yVar = "Survived")
-
-automate_numeric_plot(df, yVar = "Survived")
-
-
+# automate_factor_plot(df, yVar = "Survived")
+# automate_numeric_plot(df, yVar = "Survived")
 
 df <- automate_factor_to_lmfit(df, yVar = "Survived", drop_nzv = FALSE)
 
@@ -52,52 +49,45 @@ X_test <- df %>%
   select(-PassengerId, -train_or_test, -Survived) %>%
   as.matrix()
 
-y_train <- filter(df, train_or_test == "train")$Survived
+y_train <- filter(df, train_or_test == "train")$Survived %>%
+  factor(label = c("N", "Y"))
 
 
-trControl <- trainControl(method = "cv", number = 5, returnData = FALSE,
+trCon <- trainControl(method = "cv", number = 5, returnData = FALSE,
                           savePredictions = "final", classProbs = TRUE, search = "random")
+train_ <- purrr::partial(train, x = X_train, y = y_train, trControl = trCon, metric = "Accuracy")
+
+write_submission_ <- function(model) {
+  write_submission(data_frame(PassengerId = df_test$PassengerId,
+                             Survived = as.integer(predict(model, X_test)) - 1))
+}
 
 
 num_cores <- detectCores(logical = FALSE) - 1
 cl <- makeCluster(num_cores, type = "SOCK")
 registerDoParallel(cl)
 
-xgb_model <- train(X_train, factor(y_train, label = c("N", "Y")), method = "xgbTree",
-                   trControl = trControl, tuneLength = 100)
-write_models_log(xgb_model, "xgb2")
-save_submission(data_frame(PassengerId = df_test$PassengerId,
-                           Survived = as.integer(predict(xgb_model, X_test)) - 1))
-
-glmnet_model <- train(X_train, factor(y_train, label = c("N", "Y")), method = "glmnet",
-                      preProcess = c("center", "scale"), trControl = trControl, tuneLength = 50)
-write_models_log(glmnet_model, "glmnet")
-save_submission(data_frame(PassengerId = df_test$PassengerId,
-                           Survived = as.integer(predict(glmnet_model, X_test)) - 1))
-
-rf_model <- train(X_train, factor(y_train, label = c("N", "Y")), method = "rf",
-                  trControl = trControl, tuneLength = 50)
-write_models_log(rf_model, "rf")
-save_submission(data_frame(PassengerId = df_test$PassengerId,
-                           Survived = as.integer(predict(rf_model, X_test)) - 1))
 
 
+xgb_model <- train_(method = "xgbTree", tuneLength = 100)
+write_model(xgb_model, "xgb")
+write_submission_(xgb_model)
+
+glmnet_model <- train_(method = "glmnet", preProcess = c("center", "scale"), tuneLength = 100)
+write_model(glmnet_model, "glmnet")
+write_submission_(glmnet_model)
+
+rf_model <- train_(method = "rf", tuneLength = 11, ntree = 1000)
+write_model(rf_model, "rf")
+write_submission_(rf_model)
 
 
-
-xgb_model <- train(X_train, factor(y_train, label = c("N", "Y")), method = "xgbTree",
-                   trControl = trControl, tuneLength = 100)
-
-glmnet_model <- train(X_train, factor(y_train, label = c("N", "Y")), method = "glmnet",
-                      preProcess = c("center", "scale"), trControl = trControl, tuneLength = 100)
-
-rf_model <- train(X_train, factor(y_train, label = c("N", "Y")), method = "rf",
-                  trControl = trControl, tuneLength = 100)
 
 model_blend <- blending(list(xgb=xgb_model, glmnet=glmnet_model, rf=rf_model), X_train, y_train, X_test,
                         method="glmnet", tuneLength = 100)
+write_model(model_blend$blend_model, "blend_xgbT_glmnet_rf")
 
-save_submission(data_frame(PassengerId = df_test$PassengerId,
+write_submission(data_frame(PassengerId = df_test$PassengerId,
                            Survived = as.integer(model_blend$y_pred) - 1))
 
 

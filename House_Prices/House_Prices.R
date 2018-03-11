@@ -5,6 +5,9 @@ library(ggplot2)
 library(caret)
 library(doParallel)
 
+if ("House_Prices" %in% list.dirs(recursive = FALSE, full.names = FALSE)) {
+  setwd("House_Prices")
+}
 options(readr.num_columns = 0)
 df_train <- read_csv("data/train.csv")
 df_test <- read_csv("data/test.csv")
@@ -26,9 +29,9 @@ source("House_Prices_FE.R")  # feature engineering codes
 
 df <- automate_factor_to_lmfit(df, "SalePrice", drop_nzv = FALSE)
 
-is_cat <- function(x) {is.factor(x) | is.character(x)}
-sapply(select_if(df, is_cat), function(x){sum(is.na(x))})
-sapply(select_if(df, is.numeric), function(x){sum(is.na(x))})
+# is_cat <- function(x) {is.factor(x) | is.character(x)}
+# sapply(select_if(df, is_cat), function(x){sum(is.na(x))})
+# sapply(select_if(df, is.numeric), function(x){sum(is.na(x))})
 sapply(df, function(x){sum(is.na(x))})
 
 df <- random_impute(df, yVar = "SalePrice")
@@ -64,14 +67,38 @@ X_test <- df %>%
 
 y_train <- filter(df, train_or_test == "train")$SalePrice
 
-trControl <- trainControl(method = "cv", number = 5, returnData = FALSE,
+trCon <- trainControl(method = "cv", number = 5, returnData = FALSE,
                           savePredictions = "final", classProbs = FALSE, search = "random")
+train_ <- purrr::partial(train, x = X_train, y = y_train, trControl = trCon, metric = "RMSE")
 
+write_submission_ <- function(model) {
+  write_submission(data_frame(Id = df_test$Id,
+                              SalePrice = exp(predict(model, X_test))))
+}
 
 
 
 cl <- makeCluster(detectCores(logical = FALSE) - 1, type = "SOCK")
 registerDoParallel(cl)
+
+
+
+xgb_model <- train_(method = "xgbTree", tuneLength = 100)
+write_model(xgb_model, "xgb")
+write_submission_(xgb_model)
+
+glmnet_model <- train_(method = "glmnet", preProcess = c("center", "scale"), tuneLength = 100)
+write_model(glmnet_model, "glmnet")
+write_submission_(glmnet_model)
+
+rf_model <- train_(method = "rf", tuneLength = 11, ntree = 2000)
+write_model(rf_model, "rf")
+write_submission_(rf_model)
+
+
+
+
+
 
 
 xgb_model <- train(X_train, y_train, method = "xgbTree", trControl = trControl, tuneLength = 100)
