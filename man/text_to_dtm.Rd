@@ -4,8 +4,8 @@
 \alias{text_to_dtm}
 \title{Transform a text column from a data frame into document-term matrix}
 \usage{
-text_to_dtm(df, id, textVar, n_gram = 1, stop_rm = TRUE, stem = NULL,
-  dtm_value = "tf_idf")
+text_to_dtm(df, id, textVar, form, n_gram = 1, stop_rm = TRUE,
+  stem = NULL, dtm_value = "tf_idf")
 }
 \arguments{
 \item{df}{The data frame}

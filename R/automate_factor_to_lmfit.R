@@ -2,15 +2,15 @@
 #' @description Automatically transform all categorical variables into linear fit
 #' @author Jiacheng He
 #'
-#'
+#' @importFrom caret nearZeroVar
 #' @export
 #'
 
 
-automate_factor_to_lmfit <- function(df, yVar, drop=TRUE, drop_nzv=TRUE) {
+automate_factor_to_lmfit <- function(df, yVar, facVars=NULL, drop=TRUE, drop_nzv=TRUE) {
 
   trainIndex <- (df$train_or_test == "train")
-  facVars <- names(df)[sapply(df, is.factor)]
+  if (is.null(facVars)) { facVars <- names(df)[sapply(df, is.factor)] }
 
   facVars <- facVars[!(facVars %in% c(yVar, "train_or_test"))]
 

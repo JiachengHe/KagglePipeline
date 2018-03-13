@@ -17,7 +17,7 @@
 
 
 
-blending <- function(model_list, X_train, y_train, X_test, method, trCon=NULL, tuneLength=10, ...){
+blending <- function(model_list, X_train, y_train, X_test, method, trControl=NULL, tuneLength=10, ...){
 
   K <- length(model_list)
   n_train <- nrow(X_train)
@@ -54,14 +54,14 @@ blending <- function(model_list, X_train, y_train, X_test, method, trCon=NULL, t
     }
   }
 
-  if (is.null(trCon)) {
-    trCon <- trainControl(method = "cv", number = 5, returnData = FALSE,
+  if (is.null(trControl)) {
+    trControl <- trainControl(method = "cv", number = 5, returnData = FALSE,
                           savePredictions = "final", classProbs = classProbs, search = "random")
   }
 
 
   blend_model <- train(X_train_modelfit, y_train, method = method,
-                       trControl = trCon, tuneLength = tuneLength)
+                       trControl = trControl, tuneLength = tuneLength)
   blend_model$call$tuneLength <- tuneLength
 
   y_pred <- predict(blend_model, X_test_modelfit)

@@ -4,7 +4,7 @@
 \alias{blending}
 \title{Blend the tuned models altogether}
 \usage{
-blending(model_list, X_train, y_train, X_test, method, trCon = NULL,
+blending(model_list, X_train, y_train, X_test, method, trControl = NULL,
   tuneLength = 10, ...)
 }
 \arguments{
