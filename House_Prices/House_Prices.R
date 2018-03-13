@@ -4,10 +4,9 @@ library(dplyr)
 library(ggplot2)
 library(caret)
 library(doParallel)
+if (Sys.info()['sysname'] == "Linux") { library(Rmpi) }
+if ("House_Prices" %in% list.dirs(recursive = FALSE, full.names = FALSE)) { setwd("House_Prices") }
 
-if ("House_Prices" %in% list.dirs(recursive = FALSE, full.names = FALSE)) {
-  setwd("House_Prices")
-}
 options(readr.num_columns = 0)
 df_train <- read_csv("data/train.csv")
 df_test <- read_csv("data/test.csv")
@@ -77,45 +76,51 @@ write_submission_ <- function(model) {
 }
 
 
+if (Sys.info()['sysname'] == "Windows") {
+  num_cores <- detectCores(logical = FALSE) - 1
+  cl <- makeCluster(num_cores, type = "SOCK")
+} else if (Sys.info()['sysname'] == "Linux") {
+  num_nodes <- mpi.universe.size() - 1
+  cl <- makeCluster(num_nodes, type = "MPI")
+}
 
-cl <- makeCluster(detectCores(logical = FALSE) - 1, type = "SOCK")
 registerDoParallel(cl)
 
 
 
-xgb_model <- train_(method = "xgbTree", tuneLength = 100)
-write_model(xgb_model, "xgb")
-write_submission_(xgb_model)
+xgbTree_model <- train_(method = "xgbTree", tuneLength = 1000)
+write_model(xgbTree_model, "xgbTree")
+write_submission_(xgbTree_model)
 
-glmnet_model <- train_(method = "glmnet", preProcess = c("center", "scale"), tuneLength = 100)
+glmnet_model <- train_(method = "glmnet", preProcess = c("center", "scale"), tuneLength = 500)
 write_model(glmnet_model, "glmnet")
 write_submission_(glmnet_model)
 
-rf_model <- train_(method = "rf", tuneLength = 11, ntree = 2000)
+rf_model <- train_(method = "rf", tuneLength = 500, ntree = 2000)
 write_model(rf_model, "rf")
 write_submission_(rf_model)
 
+xgbLinear_model <- train_(method = "xgbLinear", preProcess = c("center", "scale"), tuneLength = 1000)
+write_model(xgbLinear_model, "xgbLinear")
+write_submission_(xgbLinear_model)
 
 
 
+model_list <- list(xgbTree=xgbTree_model, glmnet=glmnet_model, rf=rf_model, xgbLinear=xgbLinear_model)
+blending_ <- purrr::partial(blending, model_list = model_list, X_train = X_train, y_train = y_train,
+                            X_test = X_test, trControl = trCon)
 
 
+blend_glmnet <- blending_(method="glmnet", tuneLength = 200)
+write_model(blend_glmnet$blend_model, "blend_glmnet")
+write_submission(data_frame(Id = df_test$Id,
+                            SalePrice = exp(blend_glmnet$y_pred)))
 
-xgb_model <- train(X_train, y_train, method = "xgbTree", trControl = trControl, tuneLength = 100)
 
-glmnet_model <- train(X_train, y_train, method = "glmnet", preProcess = c("center", "scale"), trControl = trControl, tuneLength = 100)
-
-rf_model <- train(X_train, y_train, method = "rf", trControl = trControl, tuneLength = 100)
-
-lm_model <- train(X_train, y_train, method = "lm", preProcess = c("center", "scale"), trControl = trControl, tuneLength = 10)
-
-model_blend <- blending(list(xgb=xgb_model, glmnet=glmnet_model, rf=rf_model, lm=lm_model), X_train, y_train, X_test,
-                        method="glmnet", tuneLength = 100)
-
-write_models_log(model_blend, "blending_xgb_glmnet_rf_lm")
-
-save_submission(data_frame(Id = df_test$Id,
-                           SalePrice = exp(model_blend$y_pred)))
+blend_xgbL <- blending_(method="xgbLinear", tuneLength = 1000)
+write_model(blend_xgbL$blend_model, "blend_xgbL")
+write_submission(data_frame(Id = df_test$Id,
+                            SalePrice = exp(blend_xgbL$y_pred)))
 
 stopCluster(cl)
 

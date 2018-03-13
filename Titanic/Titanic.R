@@ -6,10 +6,8 @@ library(stringr)
 library(ggplot2)
 library(caret)
 library(doParallel)
-
-if ("Titanic" %in% list.dirs(recursive = FALSE, full.names = FALSE)) {
-  setwd("Titanic")
-}
+if (Sys.info()['sysname'] == "Linux") { library(Rmpi) }
+if ("Titanic" %in% list.dirs(recursive = FALSE, full.names = FALSE)) { setwd("Titanic") }
 
 options(readr.num_columns = 0)
 df_train <- read_csv("data/train.csv")
@@ -63,10 +61,15 @@ write_submission_ <- function(model) {
 }
 
 
-num_cores <- detectCores(logical = FALSE) - 1
-cl <- makeCluster(num_cores, type = "SOCK")
-registerDoParallel(cl)
+if (Sys.info()['sysname'] == "Windows") {
+  num_cores <- detectCores(logical = FALSE) - 1
+  cl <- makeCluster(num_cores, type = "SOCK")
+} else if (Sys.info()['sysname'] == "Linux") {
+  num_nodes <- mpi.universe.size() - 1
+  cl <- makeCluster(num_nodes, type = "MPI")
+}
 
+registerDoParallel(cl)
 
 
 xgb_model <- train_(method = "xgbTree", tuneLength = 100)
@@ -85,7 +88,7 @@ write_submission_(rf_model)
 
 model_blend <- blending(list(xgb=xgb_model, glmnet=glmnet_model, rf=rf_model), X_train, y_train, X_test,
                         method="glmnet", tuneLength = 100)
-write_model(model_blend$blend_model, "blend_xgbT_glmnet_rf")
+write_model(model_blend, "blend_xgbT_glmnet_rf")
 
 write_submission(data_frame(PassengerId = df_test$PassengerId,
                            Survived = as.integer(model_blend$y_pred) - 1))
