@@ -4,7 +4,9 @@
 \alias{text_to_lmfit}
 \title{Turn text variable into linear fitted value}
 \usage{
-text_to_lmfit(text_var, y, df, replaced = FALSE)
+text_to_lmfit(df, yVar, id, textVar, form, n_gram = 1, stop_rm = TRUE,
+  stem = NULL, dtm_value = "tf_idf", trainIndex = NULL, alpha = 0,
+  lambda = 0, trCon = NULL, cv_method = "none", drop = TRUE)
 }
 \author{
 Jiacheng He

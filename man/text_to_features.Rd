@@ -4,7 +4,7 @@
 \alias{text_to_features}
 \title{Transform text column into numeric features}
 \usage{
-text_to_features(df, yVar, trainIndex, id, textVar, n_gram = 1,
+text_to_features(df, yVar, id, textVar, trainIndex = NULL, n_gram = 1,
   stop_rm = TRUE, stem = NULL, dtm_value = "tf_idf")
 }
 \arguments{

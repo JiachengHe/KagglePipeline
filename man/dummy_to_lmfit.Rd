@@ -4,7 +4,7 @@
 \alias{dummy_to_lmfit}
 \title{Transform dummy variables to linear model fit}
 \usage{
-dummy_to_lmfit(df, yVar, dummy, trainIndex, alpha = 0, lambda = 0,
+dummy_to_lmfit(df, yVar, dummy, trainIndex = NULL, alpha = 0, lambda = 0,
   trCon = NULL, cv_method = "none")
 }
 \description{

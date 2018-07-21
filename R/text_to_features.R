@@ -8,7 +8,7 @@
 #'
 #' @export
 
-text_to_features <- function(df, yVar, trainIndex, id, textVar, n_gram=1, stop_rm=TRUE, stem=NULL, dtm_value="tf_idf") {
+text_to_features <- function(df, yVar, id, textVar, trainIndex=NULL, n_gram=1, stop_rm=TRUE, stem=NULL, dtm_value="tf_idf") {
 
 
   df %>%

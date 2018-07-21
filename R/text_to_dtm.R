@@ -33,24 +33,32 @@ text_to_dtm <- function(df, id, textVar, form, n_gram=1, stop_rm=TRUE, stem=NULL
     text <- mutate(text, term = wordStem(term, language = stem))
   }
 
+  if (nrow(df) != length(unique(text[[id]]))) {
+    warning(paste(nrow(df) - length(unique(text[[id]])), "documents are deleted. The document-term matrix has different number of rows
+                  from the original data frame"))
+
+    deleted_ids <- df[[id]][ (!df[[id]] %in% text[[id]]) ]
+    for (deleted_id in deleted_ids) {
+      text <- add_row(text, id = deleted_id, term = "imputed")
+    }
+  }
+
+  df[[id]]
+  unique(text$id)
+
   text <- text %>%
     count_(c(id, "term")) %>%
     bind_tf_idf_("term", id, "n")
 
-  if (form == "tidy") {
-  } else if (form == "sparse") {
+
+  if (form == "sparse") {
     text <- text %>% cast_sparse_(id, "term", dtm_value)
-    if (nrow(text) != nrow(df)) {
-      warning("Some documents are deleted. The document-term matrix has different number of rows
-              from the original data frame")
-    }
   } else if (form == "dtm") {
     text <- text %>% cast_dtm_(id, "term", dtm_value)
-    if (nrow(text) != nrow(df)) {
-      warning("Some documents are deleted. The document-term matrix has different number of rows
-              from the original data frame")
-    }
   }
+
+  text <- text[df[[id]], ]
+
 
   return(text)
 }

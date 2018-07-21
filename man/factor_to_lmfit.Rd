@@ -4,15 +4,15 @@
 \alias{factor_to_lmfit}
 \title{Insert linear projection of categorical variables}
 \usage{
-factor_to_lmfit(df, yVar, facVar, trainIndex, alpha = 0, lambda = 0,
-  trCon = NULL, cv_method = "none")
+factor_to_lmfit(df, facVar, yVar, trainIndex = NULL, alpha = 0,
+  lambda = 0, trCon = NULL, cv_method = "none", drop = TRUE)
 }
 \arguments{
 \item{df}{The data frame which contains the variables}
 
-\item{yVar}{The name of the left-hand-side target variable}
-
 \item{facVar}{The name of the factor variable}
+
+\item{yVar}{The name of the left-hand-side target variable}
 
 \item{trainIndex}{The indexes of training set observations}
 

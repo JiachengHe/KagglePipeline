@@ -19,15 +19,16 @@
 #' @export
 #' @return A data frame with new columns of the fitted values.
 
-factor_to_lmfit <- function(df, yVar, facVar, trainIndex, alpha=0, lambda=0, trCon=NULL, cv_method="none") {
+factor_to_lmfit <- function(df, facVar, yVar, trainIndex=NULL, alpha=0, lambda=0, trCon=NULL, cv_method="none", drop=TRUE) {
 
-  dummy <- as.formula(paste("~", facVar)) %>%
-    sparse.model.matrix(data = df)
+  dummy <- as.formula(paste("~", facVar)) %>% sparse.model.matrix(data = df)
 
   facVar_lmfit <- paste0(facVar, "_lmfit")
 
   df[[facVar_lmfit]] <- dummy_to_lmfit(df, yVar, dummy, trainIndex, alpha=alpha, lambda=lambda,
                                        trCon=trCon, cv_method=cv_method)
+
+  if (drop) { df[[facVar]] <- NULL }
 
   return(df)
 }

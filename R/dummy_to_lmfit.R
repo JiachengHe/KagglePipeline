@@ -5,7 +5,11 @@
 #'
 
 
-dummy_to_lmfit <- function(df, yVar, dummy, trainIndex, alpha=0, lambda=0, trCon=NULL, cv_method="none") {
+dummy_to_lmfit <- function(df, yVar, dummy, trainIndex=NULL, alpha=0, lambda=0, trCon=NULL, cv_method="none") {
+
+  if (is.null(trainIndex)) {
+    trainIndex <- !is.na(df[[yVar]])
+  }
 
   y_train <- df[[yVar]][trainIndex]
 
