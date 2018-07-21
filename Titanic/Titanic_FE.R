@@ -1,3 +1,5 @@
+library(stringr)
+
 df$Cabin_letter <- ifelse(is.na(df$Cabin), "NA", str_sub(df$Cabin, 1, 1))
 df$Cabin_letter[df$Cabin_letter != "NA"] <- "Y"
 
