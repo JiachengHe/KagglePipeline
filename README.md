@@ -10,3 +10,5 @@ I am working on adding new functions to automate transforming text features into
 
 I am trying to apply this package on Titanic competition and House Price competition.
 `
+
+### Looks like this project is put on pause indefinitely. 
